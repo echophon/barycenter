@@ -12,8 +12,8 @@
 engine.name = 'PolyPerc'
 
 viewport   = { width = 128, height = 64, frame = 0 }
-base       = { width = math.random()*20, speed = math.random()*0.01 }
-orbit      = { width = math.random()*20, speed = math.random()*0.01 }
+base       = { width = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
+orbit      = { width = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
 focus      = { x = 0, y = 0, dirty = 0 }
 focus2     = { x = 0, y = 0, dirty = 0 }
 focus3     = { x = 0, y = 0, dirty = 0 }
@@ -66,10 +66,10 @@ function enc(id,delta)
     orbit.width =  util.clamp(orbit.width + (delta*0.1),2,50)
     txt = orbit.width
   elseif id == 3 and speedFocus == 0 then
-    base.speed = util.clamp(base.speed + (delta*0.001),-1,1)
+    base.speed = util.clamp(base.speed + (delta*0.01),-2,2)
     txt = base.speed
   elseif id == 3 and speedFocus == 1 then
-    orbit.speed = util.clamp(orbit.speed + (delta*0.001),-1,1)
+    orbit.speed = util.clamp(orbit.speed + (delta*0.01),-2,2)
     txt = orbit.speed
   elseif id == 1 then
     horizon = util.clamp(horizon + delta,4,60)
@@ -121,22 +121,22 @@ end
 
 -- Interval
 re = metro.init()
-re.time = 0.005
+re.time = 0.001
 re.event = function()
   viewport.frame = viewport.frame + 1
-  focus.x =  viewport.width/2 + (math.cos(viewport.frame * base.speed) * base.width)
-  focus.y =  viewport.height/2 + (math.sin(viewport.frame * base.speed) * base.width)
-  focus2.x = viewport.width/2 + (1 - math.cos(viewport.frame * base.speed) * base.width)
-  focus2.y = viewport.height/2 + (1 - math.sin(viewport.frame * base.speed) * base.width)
+  focus.x =  viewport.width/2 + (math.cos(viewport.frame * base.speed * 0.01) * base.width)
+  focus.y =  viewport.height/2 + (math.sin(viewport.frame * base.speed * 0.01) * base.width)
+  focus2.x = viewport.width/2 + (1 - math.cos(viewport.frame * base.speed * 0.01) * base.width)
+  focus2.y = viewport.height/2 + (1 - math.sin(viewport.frame * base.speed * 0.01) * base.width)
   
-  focus3.x = focus.x + (math.cos(viewport.frame * orbit.speed) * orbit.width)
-  focus3.y = focus.y + (math.sin(viewport.frame * orbit.speed) * orbit.width)
-  focus4.x = focus.x + (1 - math.cos(viewport.frame * orbit.speed) * orbit.width)
-  focus4.y = focus.y + (1 - math.sin(viewport.frame * orbit.speed) * orbit.width)
-  focus5.x = focus2.x + (math.cos(viewport.frame * orbit.speed) * orbit.width)
-  focus5.y = focus2.y + (math.sin(viewport.frame * orbit.speed) * orbit.width)
-  focus6.x = focus2.x + (1 - math.cos(viewport.frame * orbit.speed) * orbit.width)
-  focus6.y = focus2.y + (1 - math.sin(viewport.frame * orbit.speed) * orbit.width)
+  focus3.x = focus.x + (math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus3.y = focus.y + (math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus4.x = focus.x + (1 - math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus4.y = focus.y + (1 - math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus5.x = focus2.x + (math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus5.y = focus2.y + (math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus6.x = focus2.x + (1 - math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
+  focus6.y = focus2.y + (1 - math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
   
   play(focus3)
   play(focus4)
@@ -145,3 +145,4 @@ re.event = function()
   redraw()
 end
 re:start()
+
