@@ -1,6 +1,6 @@
 -- barycenter: fluctuating relationships 
 -- 
--- v0.0.3 @echophon
+-- v0.0.4 @echophon
 --
 -- ENC 1 - offset horizon
 -- ENC 2 - adjust width
@@ -66,10 +66,10 @@ function enc(id,delta)
     orbit.width =  util.clamp(orbit.width + (delta*0.1),2,50)
     txt = orbit.width
   elseif id == 3 and speedFocus == 0 then
-    base.speed = util.clamp(base.speed + (delta*0.01),-2,2)
+    base.speed = util.clamp(base.speed + (delta*0.01),-20,20)
     txt = base.speed
   elseif id == 3 and speedFocus == 1 then
-    orbit.speed = util.clamp(orbit.speed + (delta*0.01),-2,2)
+    orbit.speed = util.clamp(orbit.speed + (delta*0.01),-20,20)
     txt = orbit.speed
   elseif id == 1 then
     horizon = util.clamp(horizon + delta,4,60)
