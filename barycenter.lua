@@ -1,6 +1,6 @@
 -- barycenter: fluctuating relationships 
 -- 
--- v0.0.2 @echophon
+-- v0.0.3 @echophon
 --
 -- ENC 1 - offset horizon
 -- ENC 2 - adjust width
@@ -121,7 +121,7 @@ end
 
 -- Interval
 re = metro.init()
-re.time = 0.001
+re.time = 0.01
 re.event = function()
   viewport.frame = viewport.frame + 1
   focus.x =  viewport.width/2 + (math.cos(viewport.frame * base.speed * 0.01) * base.width)
