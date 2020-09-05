@@ -4,9 +4,9 @@
 --
 -- ENC 1 - offset horizon
 -- ENC 2 - adjust space
--- KEY 2 - toggle space focus
+-- KEY 2 - cycle space focus
 -- ENC 3 - adjust speed
--- KEY 3 - toggle speed focus
+-- KEY 3 - cycle speed focus
 
 
 engine.name = 'PolyPerc'
@@ -75,11 +75,11 @@ function key(id,state)
     if speedFocus == 0 then
       txt = 'innerSpeed'
     elseif speedFocus == 1 then
-      txt = 'outerSpeed'
-    elseif speedFocus == 2 then
       txt = 'innerMult1'
-    elseif speedFocus == 3 then
+    elseif speedFocus == 2 then
       txt = 'innerMult2'
+    elseif speedFocus == 3 then
+      txt = 'outerSpeed'
     elseif speedFocus == 4 then
       txt = 'outerMult1'
     elseif speedFocus == 5 then
@@ -118,14 +118,15 @@ function enc(id,delta)
     inner.speed = util.clamp(inner.speed + (delta*0.01),-20,20)
     txt = inner.speed
   elseif id == 3 and speedFocus == 1 then
-    outer.speed = util.clamp(outer.speed + (delta*0.01),-20,20)
-    txt = outer.speed
-  elseif id == 3 and speedFocus == 2 then
     inOrbit[1].speedOffset = util.clamp(inOrbit[1].speedOffset + (delta*0.1),-2,2)
     txt = inOrbit[1].speedOffset
-  elseif id == 3 and speedFocus == 3 then
+  elseif id == 3 and speedFocus == 2 then
     inOrbit[2].speedOffset = util.clamp(inOrbit[2].speedOffset + (delta*0.1),-2,2)
     txt = inOrbit[2].speedOffset
+
+  elseif id == 3 and speedFocus == 3 then
+    outer.speed = util.clamp(outer.speed + (delta*0.01),-20,20)
+    txt = outer.speed
   elseif id == 3 and speedFocus == 4 then
     outOrbit[1].speedOffset = util.clamp(outOrbit[1].speedOffset + (delta*0.1),-2,2)
     txt = outOrbit[1].speedOffset
