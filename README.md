@@ -1,7 +1,7 @@
 # barycenter
 
 barycenter: fluctuating relationships
-v0.1.0 @echophon
+v0.1.1 @echophon
 
 ENC 1 - offset horizon
 
@@ -15,4 +15,4 @@ KEY 3 - cycle speed focus
 
 a script for Norns loosely based on the motion of celestial bodies https://en.wikipedia.org/wiki/Barycenter 
 
-two bodies rotate around a central point, two rotate around those, two rotate around those to create 8 visible bodies. as the visible bodies cross the horizon notes are struck and sound is made.  symmetry is maintained at a horizon of zero, offsetting the horizon allows for asymmetry
+two bodies rotate around a central point, two rotate around those, & two more rotate around those to create 8 visible bodies. as the visible bodies cross the horizon notes are struck and sound is made.  symmetry is maintained at a horizon of zero, offsetting the horizon allows for asymmetry
