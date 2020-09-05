@@ -1,27 +1,31 @@
 -- barycenter: fluctuating relationships 
 -- 
--- v0.0.4 @echophon
+-- v0.0.5 @echophon
 --
 -- ENC 1 - offset horizon
--- ENC 2 - adjust width
--- KEY 2 - toggle width focus
+-- ENC 2 - adjust space
+-- KEY 2 - toggle space focus
 -- ENC 3 - adjust speed
 -- KEY 3 - toggle speed focus
 
 
 engine.name = 'PolyPerc'
 
-viewport   = { width = 128, height = 64, frame = 0 }
-base       = { width = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
-orbit      = { width = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
-focus      = { x = 0, y = 0, dirty = 0 }
-focus2     = { x = 0, y = 0, dirty = 0 }
-focus3     = { x = 0, y = 0, dirty = 0 }
-focus4     = { x = 0, y = 0, dirty = 0 }
-focus5     = { x = 0, y = 0, dirty = 0 }
-focus6     = { x = 0, y = 0, dirty = 0 }
-widthFocus = 0
+viewport   = { width = 128, height = 64 }
+inner      = { space = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
+outer      = { space = 2+math.random(2,20), speed = math.random(1,10)*0.01 }
+
+inOrbit    = {{x=0,y=0,spaceOffset=0,speedOffset=1}
+             ,{x=0,y=0,spaceOffset=0,speedOffset=1}}
+
+outOrbit   = {{x=0,y=0,spaceOffset=0,speedOffset=1,dirty=0}
+             ,{x=0,y=0,spaceOffset=0,speedOffset=1,dirty=0}
+             ,{x=0,y=0,spaceOffset=0,speedOffset=1,dirty=0}
+             ,{x=0,y=0,spaceOffset=0,speedOffset=1,dirty=0}}
+
+spaceFocus = 0
 speedFocus = 0
+frame      = 0
 horizon    = 32
 txt        = 'hello'
 
@@ -52,25 +56,89 @@ end
 
 function key(id,state)
   if id == 2 and state == 1 then
-    widthFocus = (widthFocus + 1)%2
+    spaceFocus = (spaceFocus + 1)%2
+    if spaceFocus == 0 then
+      txt = 'innerSpaceAll'
+    elseif spaceFocus == 1 then
+      txt = 'outerSpaceAll'
+    -- elseif spaceFocus == 2 then
+    --   txt = 'innerOffSpace1'
+    -- elseif spaceFocus == 3 then
+    --   txt = 'innerOffSpace2'
+    -- elseif spaceFocus == 4 then
+    --   txt = 'outerOffSpace1'
+    -- elseif spaceFocus == 5 then
+    --   txt = 'outerOffSpace2'
+    end
   elseif id == 3 and state == 1 then
-    speedFocus = (speedFocus + 1)%2
+    speedFocus = (speedFocus + 1)%8
+    if speedFocus == 0 then
+      txt = 'innerSpeed'
+    elseif speedFocus == 1 then
+      txt = 'outerSpeed'
+    elseif speedFocus == 2 then
+      txt = 'innerMult1'
+    elseif speedFocus == 3 then
+      txt = 'innerMult2'
+    elseif speedFocus == 4 then
+      txt = 'outerMult1'
+    elseif speedFocus == 5 then
+      txt = 'outerMult2'
+    elseif speedFocus == 6 then
+      txt = 'outerMult3'
+    elseif speedFocus == 7 then
+      txt = 'outerMult4'
+    end
   end
 end
 
 function enc(id,delta)
-  if id == 2 and widthFocus == 0 then
-    base.width = util.clamp(base.width + (delta*0.1),2,50)
-    txt = base.width
-  elseif id == 2 and widthFocus == 1 then
-    orbit.width =  util.clamp(orbit.width + (delta*0.1),2,50)
-    txt = orbit.width
+  if id == 2 and spaceFocus == 0 then
+    inner.space = util.clamp(inner.space + (delta*0.1),2,50)
+    txt = inner.space
+  elseif id == 2 and spaceFocus == 1 then
+    outer.space = util.clamp(outer.space + (delta*0.1),2,50)
+    txt = outer.space
+  -- elseif id == 2 and spaceFocus == 2 then
+  --   inOrbit[1].spaceOffset = util.clamp(inOrbit[1].spaceOffset + (delta*0.1),-10,10)
+  --   txt = inOrbit[1].spaceOffset
+  -- elseif id == 2 and spaceFocus == 3 then
+  --   inOrbit[2].spaceOffset = util.clamp(inOrbit[2].spaceOffset + (delta*0.1),-10,10)
+  --   txt = inOrbit[2].spaceOffset
+  -- elseif id == 2 and spaceFocus == 4 then
+  --   outOrbit[1].spaceOffset = util.clamp(outOrbit[1].spaceOffset + (delta*0.1),-10,10)
+  --   outOrbit[2].spaceOffset = util.clamp(outOrbit[2].spaceOffset + (delta*0.1),-10,10)
+  --   txt = inOrbit[1].spaceOffset
+  -- elseif id == 2 and spaceFocus == 5 then
+  --   outOrbit[3].spaceOffset = util.clamp(outOrbit[3].spaceOffset + (delta*0.1),-10,10)
+  --   outOrbit[4].spaceOffset = util.clamp(outOrbit[4].spaceOffset + (delta*0.1),-10,10)
+  --   txt = inOrbit[1].spaceOffset
+  
   elseif id == 3 and speedFocus == 0 then
-    base.speed = util.clamp(base.speed + (delta*0.01),-20,20)
-    txt = base.speed
+    inner.speed = util.clamp(inner.speed + (delta*0.01),-20,20)
+    txt = inner.speed
   elseif id == 3 and speedFocus == 1 then
-    orbit.speed = util.clamp(orbit.speed + (delta*0.01),-20,20)
-    txt = orbit.speed
+    outer.speed = util.clamp(outer.speed + (delta*0.01),-20,20)
+    txt = outer.speed
+  elseif id == 3 and speedFocus == 2 then
+    inOrbit[1].speedOffset = util.clamp(inOrbit[1].speedOffset + (delta*0.1),-2,2)
+    txt = inOrbit[1].speedOffset
+  elseif id == 3 and speedFocus == 3 then
+    inOrbit[2].speedOffset = util.clamp(inOrbit[2].speedOffset + (delta*0.1),-2,2)
+    txt = inOrbit[2].speedOffset
+  elseif id == 3 and speedFocus == 4 then
+    outOrbit[1].speedOffset = util.clamp(outOrbit[1].speedOffset + (delta*0.1),-2,2)
+    txt = outOrbit[1].speedOffset
+  elseif id == 3 and speedFocus == 5 then
+    outOrbit[2].speedOffset = util.clamp(outOrbit[2].speedOffset + (delta*0.1),-2,2)
+    txt = outOrbit[2].speedOffset
+  elseif id == 3 and speedFocus == 6 then
+    outOrbit[3].speedOffset = util.clamp(outOrbit[3].speedOffset + (delta*0.1),-2,2)
+    txt = outOrbit[3].speedOffset
+  elseif id == 3 and speedFocus == 7 then
+    outOrbit[4].speedOffset = util.clamp(outOrbit[4].speedOffset + (delta*0.1),-2,2)
+    txt = outOrbit[4].speedOffset
+
   elseif id == 1 then
     horizon = util.clamp(horizon + delta,4,60)
     txt = horizon -32
@@ -82,13 +150,19 @@ function redraw()
   screen.clear()
   draw_horizon(horizon)
   draw_text(txt)
-  draw_circle(focus.x,focus.y,orbit.width,1)
-  draw_circle(focus2.x,focus2.y,orbit.width,1)
+
+  --inner
+  draw_circle(inOrbit[1].x, inOrbit[1].y, outer.space,1)
+  draw_circle(inOrbit[2].x, inOrbit[2].y, outer.space,1)
+  -- draw_circle(inOrbit[1].x + outOrbit[1].spaceOffset,inOrbit[1].y + outOrbit[1].spaceOffset,outer.space,1)
+  -- draw_circle(inOrbit[2].x + outOrbit[2].spaceOffset,inOrbit[2].y + outOrbit[1].spaceOffset,outer.space,1)
   
-  draw_circle(focus3.x,focus3.y,1+focus3.dirty,15)
-  draw_circle(focus4.x,focus4.y,1+focus4.dirty,15)
-  draw_circle(focus5.x,focus5.y,1+focus5.dirty,15)
-  draw_circle(focus6.x,focus6.y,1+focus6.dirty,15)
+  --outer
+  draw_circle(outOrbit[1].x,outOrbit[1].y,1+outOrbit[1].dirty,15)
+  draw_circle(outOrbit[2].x,outOrbit[2].y,1+outOrbit[2].dirty,15)
+  draw_circle(outOrbit[3].x,outOrbit[3].y,1+outOrbit[3].dirty,15)
+  draw_circle(outOrbit[4].x,outOrbit[4].y,1+outOrbit[4].dirty,15)
+
   screen.update()
 end
 
@@ -101,8 +175,8 @@ function play(orb)
     orb.dirty = 1
     
     if orb.dirty == 1 then 
-      engine.release(orbit.width * 0.005)
-      engine.cutoff(base.width * 50)
+      engine.release(outer.space * 0.005)
+      engine.cutoff(inner.space * 50)
       engine.pan((math.random()*2)-1)
       engine.hz(midi_to_hz( util.clamp(orb.x,1,viewport.width)))
       orb.dirty = 2
@@ -123,25 +197,27 @@ end
 re = metro.init()
 re.time = 0.01
 re.event = function()
-  viewport.frame = viewport.frame + 1
-  focus.x =  viewport.width/2 + (math.cos(viewport.frame * base.speed * 0.01) * base.width)
-  focus.y =  viewport.height/2 + (math.sin(viewport.frame * base.speed * 0.01) * base.width)
-  focus2.x = viewport.width/2 + (1 - math.cos(viewport.frame * base.speed * 0.01) * base.width)
-  focus2.y = viewport.height/2 + (1 - math.sin(viewport.frame * base.speed * 0.01) * base.width)
+  frame = frame + 1
+
+  --inner
+  inOrbit[1].x = viewport.width/2  + (math.cos(frame * (inner.speed * inOrbit[1].speedOffset) * 0.01) * inner.space) 
+  inOrbit[1].y = viewport.height/2 + (math.sin(frame * (inner.speed * inOrbit[1].speedOffset) * 0.01) * inner.space)
+  inOrbit[2].x = viewport.width/2  + (1 - math.cos(frame * (inner.speed * inOrbit[2].speedOffset) * 0.01) * inner.space)
+  inOrbit[2].y = viewport.height/2 + (1 - math.sin(frame * (inner.speed * inOrbit[2].speedOffset) * 0.01) * inner.space)
+
+  --outer
+  outOrbit[1].x = inOrbit[1].x + (math.cos(frame * (outer.speed * outOrbit[1].speedOffset) * 0.01) * outer.space)
+  outOrbit[1].y = inOrbit[1].y + (math.sin(frame * (outer.speed * outOrbit[1].speedOffset) * 0.01) * outer.space)
+  outOrbit[2].x = inOrbit[1].x + (1 - math.cos(frame * (outer.speed * outOrbit[2].speedOffset) * 0.01) * outer.space)
+  outOrbit[2].y = inOrbit[1].y + (1 - math.sin(frame * (outer.speed * outOrbit[2].speedOffset) * 0.01) * outer.space)
+  outOrbit[3].x = inOrbit[2].x + (math.cos(frame * (outer.speed * outOrbit[3].speedOffset) * 0.01) * outer.space)
+  outOrbit[3].y = inOrbit[2].y + (math.sin(frame * (outer.speed * outOrbit[3].speedOffset) * 0.01) * outer.space)
+  outOrbit[4].x = inOrbit[2].x + (1 - math.cos(frame * (outer.speed * outOrbit[4].speedOffset) * 0.01) * outer.space)
+  outOrbit[4].y = inOrbit[2].y + (1 - math.sin(frame * (outer.speed * outOrbit[4].speedOffset) * 0.01) * outer.space)
   
-  focus3.x = focus.x + (math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus3.y = focus.y + (math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus4.x = focus.x + (1 - math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus4.y = focus.y + (1 - math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus5.x = focus2.x + (math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus5.y = focus2.y + (math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus6.x = focus2.x + (1 - math.cos(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  focus6.y = focus2.y + (1 - math.sin(viewport.frame * orbit.speed * 0.01) * orbit.width)
-  
-  play(focus3)
-  play(focus4)
-  play(focus5)
-  play(focus6)
+  for i=1,4 do 
+    play(outOrbit[i])
+  end
   redraw()
 end
 re:start()
