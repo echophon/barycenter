@@ -1,6 +1,6 @@
 -- barycenter: fluctuating relationships 
 -- 
--- v0.1.1 @echophon
+-- v0.2.0 @echophon
 --
 -- ENC 1 - offset horizon
 -- ENC 2 - adjust space
@@ -12,9 +12,9 @@
 engine.name = 'PolyPerc'
 
 viewport   = { width = 128, height = 64 }
-inner      = { space = 2+math.random(2,20), speed = math.random(1,10)*0.01, dirty=0 }
-middle     = { space = 2+math.random(2,20), speed = math.random(1,10)*0.01, dirty=0 }
-outer      = { space = 2+math.random(2,20), speed = math.random(1,10)*0.01, dirty=0 }
+inner      = { space = 4+math.random(2,20), speed = math.random(1,10)*0.1, dirty=0 }
+middle     = { space = 4+math.random(2,20), speed = math.random(1,10)*0.1, dirty=0 }
+outer      = { space = 4+math.random(2,20), speed = math.random(1,10)*0.1, dirty=0 }
 
 innerOrbit = {{x=0,y=0}
              ,{x=0,y=0}}
@@ -24,14 +24,14 @@ middleOrbit= {{x=0,y=0}
              ,{x=0,y=0}
              ,{x=0,y=0}}
 
-outerOrbit = {{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}
-             ,{x=0,y=0,dirty=0}}
+outerOrbit = {{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}
+             ,{x=0,y=0,note=0,dirty=0}}
 
 spaceFocus = 0
 speedFocus = 0
@@ -40,6 +40,17 @@ horizon    = 32
 txt        = 'hello'
 drawOrbits = 0
 editCounter= 0
+useMidi    = 0
+channel    = 1
+m          = midi.connect()
+
+
+params:add_number("useMidi","useMidi",0,1,0)
+params:set_action("useMidi", function(x) useMidi = x end)
+
+params:add_number("channel","channel",1,16,1)
+params:set_action("channel", function(x) channel = x end)
+
 
 function draw_circle(x, y, r, l)
   screen.level(l)
@@ -90,39 +101,41 @@ end
 
 function enc(id,delta)
   if id == 2 and spaceFocus == 0 then
-    inner.space = util.clamp(inner.space + (delta*0.1),2,50)
+    inner.space = util.clamp(inner.space + (delta*0.1),4,40)
     editCounter = 0
     drawOrbits = 1
     txt = inner.space
   elseif id == 2 and spaceFocus == 1 then
-    middle.space = util.clamp(middle.space + (delta*0.1),2,50)
+    middle.space = util.clamp(middle.space + (delta*0.1),4,40)
     editCounter = 0
     drawOrbits = 1
     txt = middle.space
   elseif id == 2 and spaceFocus == 2 then
-    outer.space = util.clamp(outer.space + (delta*0.1),2,50)
+    outer.space = util.clamp(outer.space + (delta*0.1),4,40)
     editCounter = 0
     drawOrbits = 1
     txt = outer.space
   
   elseif id == 3 and speedFocus == 0 then
-    inner.speed = util.clamp(inner.speed + (delta*0.01),-20,20)
+    inner.speed = util.clamp(inner.speed + (delta*0.01),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = inner.speed
   elseif id == 3 and speedFocus == 1 then
-    middle.speed = util.clamp(middle.speed + (delta*0.01),-20,20)
+    middle.speed = util.clamp(middle.speed + (delta*0.01),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = middle.speed
   elseif id == 3 and speedFocus == 2 then
-    outer.speed = util.clamp(outer.speed + (delta*0.01),-20,20)
+    outer.speed = util.clamp(outer.speed + (delta*0.01),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = outer.speed
 
   elseif id == 1 then
     horizon = util.clamp(horizon + delta,4,60)
+    editCounter = 0
+    drawOrbits = 1
     txt = horizon -32
   end
   redraw()
@@ -130,8 +143,11 @@ end
 
 function redraw()
   screen.clear()
-  draw_horizon(horizon)
-  draw_text(txt)
+
+  if drawOrbits == 1 then
+    draw_horizon(horizon)
+    draw_text(txt)
+  end
 
   --inner inner
   draw_circle(viewport.width/2, viewport.height/2, inner.space, drawOrbits)
@@ -164,19 +180,28 @@ function distance( x1, y1, x2, y2 )
 end
 
 function play(orb)
-  if math.floor(orb.y) == horizon and orb.dirty == 0 then
+  -- if math.floor(orb.y) == horizon and orb.dirty == 0 then
+  if distance(0, orb.y, 0, horizon) < 2 and orb.dirty == 0 then
     orb.dirty = 1
+  end
     
-    if orb.dirty == 1 then 
-      engine.release(outer.space * 0.005)
-      engine.cutoff(inner.space * 50)
-      engine.pan((math.random()*2)-1)
-      engine.hz(midi_to_hz( util.clamp(orb.x,1,viewport.width)))
-      orb.dirty = 2
-    end
+  if orb.dirty == 1 and useMidi == 0 then 
+    engine.release(outer.space * 0.005)
+    engine.cutoff(inner.space * 50)
+    engine.pan((math.random()*2)-1)
+    engine.hz(midi_to_hz( util.clamp(orb.x,1,viewport.width)))
+    orb.dirty = 2
+  elseif orb.dirty == 1 and useMidi == 1 then
+    orb.note = util.clamp(math.floor(orb.x),1,viewport.width)
+    -- m:note_on(orb.note,util.clamp(math.floor(outer.space+middle.space)*2,1,127),1)
+    m:note_on(orb.note,util.clamp(127-(math.floor(distance(orb.x, orb.y, viewport.width/2, viewport.height/2))*2),1,127),channel)
+    orb.dirty = 2
   end
   
-  if distance(0, orb.y, 0, horizon) > 2 or distance(0, orb.y, 0, horizon) < -2 and orb.dirty == 2 then
+  if distance(0, orb.y, 0, horizon) > 2  and orb.dirty == 2 then
+    if useMidi == 1 then
+      m:note_off(orb.note,util.clamp(127-(math.floor(distance(orb.x, orb.y, viewport.width/2, viewport.height/2))*2),1,127),channel)
+    end
     orb.dirty = 0
   end
 end
@@ -188,7 +213,7 @@ end
 
 -- Interval
 re = metro.init()
-re.time = 0.01
+re.time = 0.05
 re.event = function()
   frame = frame + 1
   editCounter = editCounter + 1
@@ -221,7 +246,6 @@ re.event = function()
   outerOrbit[3].y = middleOrbit[2].y + (math.sin(frame * (outer.speed) * 0.01) * outer.space)
   outerOrbit[4].x = middleOrbit[2].x + (1 - math.cos(frame * (outer.speed) * 0.01) * outer.space)
   outerOrbit[4].y = middleOrbit[2].y + (1 - math.sin(frame * (outer.speed) * 0.01) * outer.space)
-  
   outerOrbit[5].x = middleOrbit[3].x + (math.cos(frame * (outer.speed) * 0.01) * outer.space)
   outerOrbit[5].y = middleOrbit[3].y + (math.sin(frame * (outer.speed) * 0.01) * outer.space)
   outerOrbit[6].x = middleOrbit[3].x + (1 - math.cos(frame * (outer.speed) * 0.01) * outer.space)

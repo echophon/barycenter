@@ -1,7 +1,7 @@
 # barycenter
 
 barycenter: fluctuating relationships
-v0.1.1 @echophon
+v0.2.0 @echophon
 
 ENC 1 - offset horizon
 
