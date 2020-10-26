@@ -1,6 +1,6 @@
 -- barycenter: fluctuating relationships 
 -- 
--- v0.2.0 @echophon
+-- v0.3 @echophon
 --
 -- ENC 1 - offset horizon
 -- ENC 2 - adjust space
@@ -10,6 +10,23 @@
 
 
 engine.name = 'PolyPerc'
+
+MusicUtil = require "musicutil"
+
+local scale_names = {}
+notes = {}
+num_to_add = 0
+
+function build_scale()
+    notes = {}
+    notes = MusicUtil.generate_scale(params:get("root_note"), params:get("scale_mode"), params:get("octaves"))
+    -- notes = MusicUtil.generate_scale_of_length(params:get("root_note"), params:get("scale_mode"), length)
+    -- num_to_add = 128 - #notes
+    num_to_add = #notes
+    for i = 1, num_to_add do
+      table.insert(notes, notes[i])
+    end
+end
 
 viewport   = { width = 128, height = 64 }
 inner      = { space = 4+math.random(2,20), speed = math.random(1,10)*0.1, dirty=0 }
@@ -43,14 +60,58 @@ editCounter= 0
 useMidi    = 0
 channel    = 1
 m          = midi.connect()
+shift      = 0
 
 
-params:add_number("useMidi","useMidi",0,1,0)
-params:set_action("useMidi", function(x) useMidi = x end)
 
-params:add_number("channel","channel",1,16,1)
-params:set_action("channel", function(x) channel = x end)
 
+
+function init()
+  for i = 1, #MusicUtil.SCALES do
+    table.insert(scale_names, string.lower(MusicUtil.SCALES[i].name))
+  end
+
+  params:add{type = "number", id = "octaves", name = "octaves", min = 1, max = 10, default = 5,
+  action = function() build_scale() end}
+
+  params:add{type = "option", id = "scale_mode", name = "scale mode",
+  options = scale_names, default = 5,
+  action = function() build_scale() end}
+
+  params:add{type = "number", id = "root_note", name = "root note",
+  min = 0, max = 127, default = 24, formatter = function(param) return MusicUtil.note_num_to_name(param:get(), true) end,
+  action = function() build_scale() end}
+
+  params:add_number("useMidi","useMidi",0,1,0)
+  params:set_action("useMidi", function(x) useMidi = x end)
+
+  -- params:add_number("channel","channel",1,16,1)
+  -- params:set_action("channel", function(x) channel = x end)
+
+  params:add_number("innerSpace","innerSpace",4.0,40.0,4.0)
+  params:set_action("innerSpace", function(x) inner.space = x end)
+
+  params:add_number("middleSpace","middleSpace",4,40,4)
+  params:set_action("middleSpace", function(x) middle.space = x end)
+
+  params:add_number("outerSpace","outerSpace",4,40,4)
+  params:set_action("outerSpace", function(x) outer.space = x end)
+
+  params:add_number("innerSpeed","innerSpeed",-50,50,0.5)
+  params:set_action("innerSpeed", function(x) inner.speed = x end)
+
+  params:add_number("middleSpeed","middleSpeed",-50,50,0.5)
+  params:set_action("middleSpeed", function(x) middle.speed = x end)
+
+  params:add_number("outerSpeed","outerSpeed",-50,50,0.5)
+  params:set_action("outerSpeed", function(x) outer.speed = x end)
+
+  params:add_number("horizon","horizon",4,60,0.5)
+  params:set_action("horizon", function(x) horizon = x end)
+    
+  build_scale()
+
+end
 
 function draw_circle(x, y, r, l)
   screen.level(l)
@@ -76,9 +137,20 @@ function draw_text(txt)
   screen.stroke()
 end
   
+function kill_all_midi()
+  for ch = 1, 16 do
+    for note = 0, 127 do
+       m:note_off(note, ch)
+    end
+  end
+end
+
+
 
 function key(id,state)
-  if id == 2 and state == 1 then
+  if id == 1 and state == 1 then
+    shift = state
+  elseif id == 2 and state == 1 then
     spaceFocus = (spaceFocus + 1)%3
     if spaceFocus == 0 then
       txt = 'innerSpace'
@@ -86,6 +158,8 @@ function key(id,state)
       txt = 'middleSpace'
     elseif spaceFocus == 2 then
       txt = 'outerSpace'
+    elseif shift == 1 then
+      kill_all_midi()
     end
   elseif id == 3 and state == 1 then
     speedFocus = (speedFocus + 1)%3
@@ -117,17 +191,17 @@ function enc(id,delta)
     txt = outer.space
   
   elseif id == 3 and speedFocus == 0 then
-    inner.speed = util.clamp(inner.speed + (delta*0.01),-10,10)
+    inner.speed = util.clamp(inner.speed + (delta*0.1),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = inner.speed
   elseif id == 3 and speedFocus == 1 then
-    middle.speed = util.clamp(middle.speed + (delta*0.01),-10,10)
+    middle.speed = util.clamp(middle.speed + (delta*0.1),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = middle.speed
   elseif id == 3 and speedFocus == 2 then
-    outer.speed = util.clamp(outer.speed + (delta*0.01),-10,10)
+    outer.speed = util.clamp(outer.speed + (delta*0.1),-10,10)
     editCounter = 0
     drawOrbits = 1
     txt = outer.speed
@@ -189,18 +263,28 @@ function play(orb)
     engine.release(outer.space * 0.005)
     engine.cutoff(inner.space * 50)
     engine.pan((math.random()*2)-1)
-    engine.hz(midi_to_hz( util.clamp(orb.x,1,viewport.width)))
+    -- engine.hz(midi_to_hz( util.clamp(orb.x,1,viewport.width)))
+
+    local note_num = notes[(math.floor( orb.x * (num_to_add / viewport.width) ) % num_to_add) + 1]
+    local freq = MusicUtil.note_num_to_freq(note_num)
+    engine.hz(freq)
+
     orb.dirty = 2
   elseif orb.dirty == 1 and useMidi == 1 then
-    orb.note = util.clamp(math.floor(orb.x),1,viewport.width)
+    --orb.note = util.clamp(math.floor(orb.x),1,viewport.width)
     -- m:note_on(orb.note,util.clamp(math.floor(outer.space+middle.space)*2,1,127),1)
-    m:note_on(orb.note,util.clamp(127-(math.floor(distance(orb.x, orb.y, viewport.width/2, viewport.height/2))*2),1,127),channel)
+    -- m:note_on(orb.note,util.clamp(127-(math.floor(distance(orb.x, orb.y, viewport.width/2, viewport.height/2))*2),1,127),channel)
+    local note_num = notes[(math.floor( orb.x * (num_to_add / viewport.width) ) % num_to_add) + 1]
+    orb.note = note_num
+    --local freq = MusicUtil.note_num_to_freq(note_num)
+    m:note_off(note_num,channel)
+    m:note_on(note_num,127,channel)
     orb.dirty = 2
   end
   
   if distance(0, orb.y, 0, horizon) > 2  and orb.dirty == 2 then
     if useMidi == 1 then
-      m:note_off(orb.note,util.clamp(127-(math.floor(distance(orb.x, orb.y, viewport.width/2, viewport.height/2))*2),1,127),channel)
+      m:note_off(orb.note,channel)
     end
     orb.dirty = 0
   end
